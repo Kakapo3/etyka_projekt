@@ -1,0 +1,18 @@
+age,workclass,fnlwgt,education,education-num,marital-status,occupation,relationship,race,sex,capital-gain,capital-loss,hours-per-week,native-country,income
+
+
+age - person's age in years
+workclass - category of employment
+fnlwgt - final weight - statistical value representing how many people in the population each record represents after sampling adjustments
+education - highest level of education achieved
+education-num - Numerical value for education level
+marital-status - marital status category
+occupation - type of occupation/job
+relationship - family relationship role
+race - racial category
+sex - recorded gender
+capital-gain - income from investment sources
+capital-loss - losses from investment sources
+hours-per-week - hours worked per week
+native-country - country of origin
+income - income bracket category
