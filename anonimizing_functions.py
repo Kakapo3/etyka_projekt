@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 
 
@@ -13,23 +12,33 @@ def add_noise(df, column, max_noise=5):
     return noisy_df
 
 
-def generalize(df, column, percentage=10):
+def generalize(df, column, percentage=10, as_string=True):
     """
     Generalizuje wartości liczbowe w kolumnie przez zamianę ich na przedziały.
-    Przedziały mają wielkość opartą na podanym procencie z maksymalnej wartości w kolumnie.
+    Można zwrócić przedziały jako string lub jako osobne kolumny numeryczne.
     """
     generalized_df = df.copy()
     if column in generalized_df.columns:
         col_min = generalized_df[column].min()
         col_max = generalized_df[column].max()
-        range_size = (col_max - col_min) * (percentage / 100)
+        range_size = max((col_max - col_min) * (percentage / 100), 1)  # zabezpieczenie
 
         def to_interval(val):
             lower = (val // range_size) * range_size
             upper = lower + range_size
-            return f"[{int(lower)}, {int(upper)})"
+            if as_string:
+                return f"[{int(lower)}, {int(upper)})"
+            else:
+                return lower, upper
 
-        generalized_df[column] = generalized_df[column].apply(to_interval)
+        generalized_df[column + '_generalized'] = generalized_df[column].apply(to_interval)
+
+        if not as_string:
+            generalized_df[[f'{column}_lower', f'{column}_upper']] = pd.DataFrame(
+                generalized_df[column + '_generalized'].tolist(), index=generalized_df.index
+            )
+            generalized_df = generalized_df.drop(columns=[column + '_generalized'])
+
     return generalized_df
 
 

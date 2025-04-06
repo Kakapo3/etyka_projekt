@@ -56,11 +56,6 @@ def create_model(_pipeline, _train_data, _test_data):
     _train_data["income"] = _train_data["income"].map({">50K": 1, "<=50K": 0})
     _test_data["income"] = _test_data["income"].map({">50K": 1, "<=50K": 0})
 
-    print("\nMissing values in training data:")
-    print(_train_data.isnull().sum())
-    print("\nMissing values in test data:")
-    print(_test_data.isnull().sum())
-
     X_train = _train_data.drop("income", axis=1)
     y_train = _train_data["income"]
     X_test = _test_data.drop("income", axis=1)
@@ -139,20 +134,23 @@ def predict_income(model, age, workclass, education, marital_status, occupation,
 
 print('-----------------------------')
 
-train_data, test_data = read_data()
-pipeline = get_pipeline()
-create_model(pipeline, train_data, test_data)
 
-predict_income(pipeline,
-               age=45,
-               workclass=' Private',
-               education=' Bachelors',
-               marital_status=' Married-civ-spouse',
-               occupation=' Exec-managerial',
-               relationship=' Husband',
-               race=' White',
-               sex=' Male',
-               capital_gain=0,
-               capital_loss=0,
-               hours_per_week=45,
-               native_country=' United-States')
+def test():
+    train_data, test_data = read_data()
+    pipeline = get_pipeline()
+    create_model(pipeline, train_data, test_data)
+
+    predict_income(pipeline,
+                   age=45,
+                   workclass=' Private',
+                   education=' Bachelors',
+                   marital_status=' Married-civ-spouse',
+                   occupation=' Exec-managerial',
+                   relationship=' Husband',
+                   race=' White',
+                   sex=' Male',
+                   capital_gain=0,
+                   capital_loss=0,
+                   hours_per_week=45,
+                   native_country=' United-States')
+
