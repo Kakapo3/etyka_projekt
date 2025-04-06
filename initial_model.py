@@ -8,73 +8,82 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-column_names = ['age', 'workclass', 'fnlwgt', 'education', 'education-num',
-                'marital-status', 'occupation', 'relationship', 'race', 'sex',
-                'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'income']
 
-categorical_features = ['workclass', 'education', 'marital-status', 'occupation',
-                        'relationship', 'race', 'sex', 'native-country']
-numerical_features = ['age', 'fnlwgt', 'education-num', 'capital-gain',
-                      'capital-loss', 'hours-per-week']
+def read_data():
+    _column_names = ['age', 'workclass', 'fnlwgt', 'education', 'education-num',
+                     'marital-status', 'occupation', 'relationship', 'race', 'sex',
+                     'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'income']
+    _train_data = pd.read_csv("adult/adult.data", names=_column_names, sep=', ', na_values=' ?', engine='python')
 
-train_data = pd.read_csv("adult/adult.data", names=column_names, sep=', ', na_values=' ?', engine='python')
+    _test_data = pd.read_csv("adult/adult.test", names=_column_names, sep=', ', na_values=' ?',
+                             engine='python')
+    return _train_data, _test_data
 
-test_data = pd.read_csv("adult/adult.test", names=column_names, sep=', ', na_values=' ?',
-                        engine='python')
-test_data['income'] = test_data['income'].str.replace('.', '')
 
-test_data['income'] = test_data['income'].str.replace('.', '')
-test_data['income'] = test_data['income'].str.strip()
-train_data['income'] = train_data['income'].str.strip()
+def get_pipeline():
+    categorical_features = ['workclass', 'education', 'marital-status', 'occupation',
+                            'relationship', 'race', 'sex', 'native-country']
+    numerical_features = ['age', 'fnlwgt', 'education-num', 'capital-gain',
+                          'capital-loss', 'hours-per-week']
 
-train_data = train_data.replace('?', np.nan)
-test_data = test_data.replace('?', np.nan)
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', StandardScaler(), numerical_features),
+            ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
+        ])
 
-train_data.dropna(inplace=True)
-test_data.dropna(inplace=True)
-
-train_data["income"] = train_data["income"].map({">50K": 1, "<=50K": 0})
-test_data["income"] = test_data["income"].map({">50K": 1, "<=50K": 0})
-
-print("\nMissing values in training data:")
-print(train_data.isnull().sum())
-print("\nMissing values in test data:")
-print(test_data.isnull().sum())
-
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('num', StandardScaler(), numerical_features),
-        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
+    svc_pipeline = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('classifier', SVC(probability=True, C=1.0, kernel='rbf', gamma='scale'))
     ])
 
-svc_pipeline = Pipeline(steps=[
-    ('preprocessor', preprocessor),
-    ('classifier', SVC(probability=True, C=1.0, kernel='rbf', gamma='scale'))
-])
+    return svc_pipeline
 
-X_train = train_data.drop("income", axis=1)
-y_train = train_data["income"]
-X_test = test_data.drop("income", axis=1)
-y_test = test_data["income"]
 
-svc_pipeline.fit(X_train, y_train)
-y_pred = svc_pipeline.predict(X_test)
+def create_model(_pipeline, _train_data, _test_data):
+    _test_data['income'] = _test_data['income'].str.replace('.', '')
 
-print("\nModel Evaluation:")
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
+    _test_data['income'] = _test_data['income'].str.replace('.', '')
+    _test_data['income'] = _test_data['income'].str.strip()
+    _train_data['income'] = _train_data['income'].str.strip()
 
-cm = confusion_matrix(y_test, y_pred)
-plt.figure(figsize=(8, 6))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-            xticklabels=['<=50K', '>50K'],
-            yticklabels=['<=50K', '>50K'])
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-plt.title('Confusion Matrix')
-plt.show()
-print("Confusion matrix saved to 'confusion_matrix.png'")
+    _train_data = _train_data.replace('?', np.nan)
+    _test_data = _test_data.replace('?', np.nan)
+
+    _train_data.dropna(inplace=True)
+    _test_data.dropna(inplace=True)
+
+    _train_data["income"] = _train_data["income"].map({">50K": 1, "<=50K": 0})
+    _test_data["income"] = _test_data["income"].map({">50K": 1, "<=50K": 0})
+
+    print("\nMissing values in training data:")
+    print(_train_data.isnull().sum())
+    print("\nMissing values in test data:")
+    print(_test_data.isnull().sum())
+
+    X_train = _train_data.drop("income", axis=1)
+    y_train = _train_data["income"]
+    X_test = _test_data.drop("income", axis=1)
+    y_test = _test_data["income"]
+
+    _pipeline.fit(X_train, y_train)
+    y_pred = _pipeline.predict(X_test)
+
+    print("\nModel Evaluation:")
+    print("Accuracy:", accuracy_score(y_test, y_pred))
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_pred))
+
+    cm = confusion_matrix(y_test, y_pred)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                xticklabels=['<=50K', '>50K'],
+                yticklabels=['<=50K', '>50K'])
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.title('Confusion Matrix')
+    plt.show()
+    print("Confusion matrix saved to 'confusion_matrix.png'")
 
 
 def predict_income(model, age, workclass, education, marital_status, occupation,
@@ -127,9 +136,14 @@ def predict_income(model, age, workclass, education, marital_status, occupation,
 
     return prediction, probability
 
+
 print('-----------------------------')
 
-predict_income(svc_pipeline,
+train_data, test_data = read_data()
+pipeline = get_pipeline()
+create_model(pipeline, train_data, test_data)
+
+predict_income(pipeline,
                age=45,
                workclass=' Private',
                education=' Bachelors',
