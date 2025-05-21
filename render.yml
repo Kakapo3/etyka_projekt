@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: react-frontend
+    env: docker
+    buildCommand: docker build -t react-frontend .
+    startCommand: docker run -p $PORT:80 react-frontend
